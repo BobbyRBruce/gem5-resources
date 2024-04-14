@@ -15,6 +15,15 @@ This resource is deliberately kept simple and is used primarily for testing purp
 
 Run `make`.
 
+### Building to different OS's
+
+In order to test whether binaries built on different OS's are simulated correctly in SE mode, this binary can be build in a Ubuntu 22.04 docker container and a Ubuntu 24.04 docker container:
+
+```sh
+make print-this-22-4  # will create 'print-this-22-4', compiled in a Ubuntu 22.04 container.
+make print-this-24-4  # will create 'print-this-24-4', compiled in a Ubuntu 24.04 container.
+```
+
 ## Cleaning Instructions
 
 Run `make clean` on the Makefile directory.

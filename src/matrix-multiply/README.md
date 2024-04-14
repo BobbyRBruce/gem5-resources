@@ -16,6 +16,15 @@ Run `make`.
 
 This will only compile the binary to the X86 ISA.
 
+### Building to different OS's
+
+In order to test whether binaries built on different OS's are simulated correctly in SE mode, this binary can be build in a Ubuntu 22.04 docker container and a Ubuntu 24.04 docker container:
+
+```sh
+make matrix-multiply-22-4  # will create 'matrix-multiply-22-4', compiled in a Ubuntu 22.04 container.
+make matrix-multiply-24-4  # will create 'matrix-multiply-24-4', compiled in a Ubuntu 24.04 container.
+```
+
 ## Cleaning Instructions
 
 Run `make clean` in the Makefile directory.
