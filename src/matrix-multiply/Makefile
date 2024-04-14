@@ -30,10 +30,10 @@ matrix-multiply:
 	gcc -o matrix-multiply matrix-multiply.c --static
 
 matrix-multiply-22-04:
-	docker run -u${UID}:${GID} -v`pwd`:/gem5 -w /gem5 -it --rm ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest gcc -o matrix-multiply-22-04 matrix-multiply.c --static
+	docker run -u$${UID}:$${GID} -v`pwd`:/gem5 -w /gem5 -it --rm ghcr.io/gem5/ubuntu-22.04_all-dependencies:latest gcc -o matrix-multiply-22-04 matrix-multiply.c --static
 
 matrix-mutiply-24-04:
-	docker run -u${UID}:${GID} -v`pwd`:/gem5 -w /gem5 -it --rm ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest gcc -o matrix-multiply-24-04 matrix-multiply.c --static
+	docker run -u$${UID}:$${GID} -v`pwd`:/gem5 -w /gem5 -it --rm ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest gcc -o matrix-multiply-24-04 matrix-multiply.c --static
 
 clean:
 	- rm matrix-multiply
