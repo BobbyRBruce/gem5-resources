@@ -24,27 +24,30 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-"""Create the MI200 GPUFS smoke-kernel checkpoint resource."""
+"""Create the MI355X GPUFS smoke-kernel checkpoint resource."""
 
 import argparse
+import runpy
 import sys
 from pathlib import Path
 
-from m5.util import addToPath
-
-parser = argparse.ArgumentParser(add_help=False, allow_abbrev=False)
+parser = argparse.ArgumentParser()
 parser.add_argument(
     "--gem5-root",
     type=Path,
     required=True,
-    help="Path to a gem5 checkout containing the MI200 GPUFS config",
+    help="Path to a gem5 checkout containing the MI355X GPUFS config",
 )
 parser.add_argument(
     "--resource-directory",
     type=Path,
     default=Path(__file__).resolve().parent / "resources",
 )
-parser.add_argument("--stage", choices=("loader", "kernel"), required=True)
+parser.add_argument(
+    "--mode",
+    choices=("create-loader", "create-kernel"),
+    required=True,
+)
 parser.add_argument(
     "--loader-checkpoint",
     type=Path,
@@ -53,63 +56,58 @@ parser.add_argument(
 parser.add_argument(
     "--kernel-binary",
     type=Path,
-    help="gfx90a code object to load before the final checkpoint",
+    help="gfx950 code object to load before the final checkpoint",
 )
-args, remaining_args = parser.parse_known_args()
-if not any(
-    arg == "--checkpoint-dir" or arg.startswith("--checkpoint-dir=")
-    for arg in remaining_args
-):
-    parser.error("--checkpoint-dir is required")
-sys.argv[1:] = remaining_args
+parser.add_argument(
+    "--checkpoint-output",
+    type=Path,
+    required=True,
+    help="Directory in which to save the generated checkpoint",
+)
+args = parser.parse_args()
 
 gem5_root = args.gem5_root.resolve()
-addToPath(str(gem5_root / "configs"))
-addToPath(str(gem5_root / "configs" / "example" / "gpufs"))
-
-from mi200 import runMI200GPUFS
-
-from gem5.resources.resource import (
-    CheckpointResource,
-    FileResource,
-    obtain_resource,
-)
-
-resource_kwargs = {
-    "resource_directory": str(args.resource_directory),
-    "resource_version": "1.0.0",
-}
+config = gem5_root / "tests" / "gem5" / "gpu" / "configs" / "mi355x_gpu.py"
+if not config.is_file():
+    parser.error(f"MI355X GPUFS config not found: {config}")
+sys.path.insert(0, str(config.parent))
 
 source_directory = Path(__file__).resolve().parent
-if args.stage == "loader":
+config_args = [
+    str(config),
+    "--resource-directory",
+    str(args.resource_directory),
+    "--mode",
+    args.mode,
+    "--checkpoint-output",
+    str(args.checkpoint_output),
+]
+
+if args.mode == "create-loader":
     if args.loader_checkpoint or args.kernel_binary:
         parser.error(
             "--loader-checkpoint and --kernel-binary are only valid for the "
             "kernel stage"
         )
-    checkpoint = None
-    application = FileResource(
-        local_path=str(source_directory / "hip-checkpoint-runner.py")
+    config_args.extend(
+        (
+            "--gpu-application-binary",
+            str(source_directory / "hip-checkpoint-runner.py"),
+        )
     )
-    application_is_kernel_object = False
-    extra_boot_options = ("init=/home/gem5/run_gem5_app.sh",)
 else:
     if not args.loader_checkpoint or not args.kernel_binary:
         parser.error(
             "the kernel stage requires --loader-checkpoint and --kernel-binary"
         )
-    checkpoint = CheckpointResource(local_path=str(args.loader_checkpoint))
-    application = FileResource(local_path=str(args.kernel_binary))
-    application_is_kernel_object = True
-    extra_boot_options = ()
+    config_args.extend(
+        (
+            "--checkpoint-directory",
+            str(args.loader_checkpoint),
+            "--gpu-kernel-binary",
+            str(args.kernel_binary),
+        )
+    )
 
-runMI200GPUFS(
-    cpu_type="X86AtomicSimpleCPU",
-    disk=obtain_resource("x86-ubuntu-24.04-gpu-img", **resource_kwargs),
-    kernel=obtain_resource("x86-linux-kernel-6.8.0-gpu", **resource_kwargs),
-    app=application,
-    checkpoint=checkpoint,
-    system_memory="2GiB",
-    extra_boot_options=extra_boot_options,
-    application_is_kernel_object=application_is_kernel_object,
-)
+sys.argv = config_args
+runpy.run_path(str(config), run_name="__main__")

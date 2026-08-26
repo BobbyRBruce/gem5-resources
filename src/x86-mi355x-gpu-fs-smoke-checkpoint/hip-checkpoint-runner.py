@@ -26,7 +26,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-"""Prepare and resume the initialized HIP loader for the MI200 smoke kernel."""
+"""Prepare and resume the initialized HIP loader for the MI355X smoke kernel."""
 
 import base64
 import ctypes
@@ -45,6 +45,8 @@ hip.hipHostMalloc.argtypes = (
     ctypes.c_size_t,
     ctypes.c_uint,
 )
+hip.hipHostFree.argtypes = (ctypes.c_void_p,)
+hip.hipHostFree.restype = ctypes.c_int
 hip.hipModuleLoad.argtypes = (
     ctypes.POINTER(ctypes.c_void_p),
     ctypes.c_char_p,
@@ -131,4 +133,5 @@ launch_and_synchronize()
 if value.value != 42:
     raise RuntimeError(f"GPU kernel returned {value.value}, expected 42")
 
+check(hip.hipHostFree(value_pointer), "hipHostFree")
 print("GPU checkpoint restore test passed", flush=True)
