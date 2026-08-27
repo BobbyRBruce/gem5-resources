@@ -27,13 +27,10 @@ below can load another compatible `gfx950` code object, but it does not provide
 the final checkpoint's fast restore path.
 
 The configuration uses `ViperBoard`, an Atomic x86 CPU, `MI355X`, the Viper
-cache hierarchy, 2 GiB of system memory, 16 GiB of HBM, and four compute
+cache hierarchy, 8 GiB of system memory, 16 GiB of HBM, and four compute
 units. Four CUs retain one complete SQC and scalar-cache group. KVM is not
 required. It obtains version `1.0.0` of both
 `x86-ubuntu-24.04-gpu-img` and `x86-linux-kernel-6.8.0-gpu`.
-The configuration also pins the synthetic ROCm agent to gfx version 9.5.0;
-without that target override ROCm 7.0 creates the KFD node but HIP reports
-that no device is available.
 
 Build the VEGA_X86 simulator in a gem5 checkout containing the corresponding
 MI355X checkpoint support. Create the initialized loader checkpoint first:
